@@ -229,13 +229,18 @@ class DialogueExtractor:
         )
     
     def _read_text_file(self, file_path: str) -> str:
-        """读取文本文件"""
-        try:
-            with open(file_path, 'r', encoding='utf-8') as file:
-                return file.read()
-        except Exception as e:
-            logger.error(f"读取文件失败 {file_path}: {e}")
-            raise
+        """读取文本文件，支持多种编码"""
+        encodings = ['utf-8', 'gbk', 'ansi']  # 尝试的编码列表
+        for encoding in encodings:
+            try:
+                with open(file_path, 'r', encoding=encoding) as file:
+                    return file.read()
+            except UnicodeDecodeError:
+                logger.warning(f"尝试使用编码 {encoding} 读取文件失败，切换到下一个编码。")
+            except Exception as e:
+                logger.error(f"读取文件失败 {file_path} 使用编码 {encoding}: {e}")
+                break  # 停止尝试其他编码
+        raise ValueError(f"无法读取文件 {file_path}，请检查文件编码。")
     
     def _chunk_text(self, text: str) -> List[str]:
         """
